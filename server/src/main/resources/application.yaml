@@ -1,0 +1,56 @@
+spring:
+  profiles:
+    active: dev
+
+server:
+  error:
+    include-stacktrace: never
+  port: ${PORT:8080}
+
+# common
+
+tokenExpirationMinutes: ${TOKEN_EXPIRATION_MINUTES:600}
+tokenIssuer: ${TOKEN_ISSUER:workingbit.com}
+# length minimum 256 bites
+tokenSecret: ${TOKEN_SECRET:S2{Ux(QSDpuF(qh_E{|T3W}w9{^rWd*tQf6()eV2}
+whiteListedAuthUrls: /api,/api/public**
+jwtTokenMatchUrls: /api/protected/metrics**,/api/auth/authenticated
+headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials,X-Requested-With,Origin,Content-Type,Accept,Authorization,WWW-Authenticate
+methods: GET,POST,PATCH,PUT,DELETE
+#exposedHeaders: WWW-Authenticate
+
+loginUrl: /api/auth/token
+logoutUrl: /api/logout
+
+realmKey: ${REALM_KEY:abcd1234}
+realmName: ${REALM_NAME:Welcome to an example of Digest authorization}
+
+# prod
+---
+spring:
+  profiles: prod
+
+server:
+  error:
+    include-exception: off
+    whitelabel:
+      enabled: off
+    include-stacktrace: never
+    include-binding-errors: never
+    include-message: never
+
+originUrls: ${ORIGIN_URL:http://localhost:3000,http://localhost:4200}
+
+
+# dev
+---
+spring:
+  profiles: dev
+
+logging:
+  level:
+    ru.hackatonkursk: debug
+    web: debug
+#    org.springframework: debug
+
+originUrls: http://localhost:3000,http://localhost:4200
