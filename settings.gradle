@@ -1,2 +1,2 @@
 rootProject.name = 'digest-auth-with-jwt'
-include 'server'
+include 'spring-server'
