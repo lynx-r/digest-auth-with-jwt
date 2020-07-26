@@ -9,14 +9,22 @@ server:
 
 # common
 
-tokenExpirationMinutes: ${TOKEN_EXPIRATION_MINUTES:600}
+# JWT config
+jwsAlgorithmName: ${JWS_ALGORITHM_NAME:HS256}
+jwsAlgorithmRequirement: ${JWS_ALGORITHM_REQUIREMENT:REQUIRED}
+secretKeyAlgorithm: ${SECRET_KEY_ALGORITHM:HMAC}
+accessTokenExpirationMinutes: ${ACCESS_TOKEN_EXPIRATION_MINUTES:1}
+refreshTokenExpirationHours: ${REFRESH_TOKEN_EXPIRATION_HOURS:48}
 tokenIssuer: ${TOKEN_ISSUER:workingbit.com}
 # length minimum 256 bites
 tokenSecret: ${TOKEN_SECRET:S2{Ux(QSDpuF(qh_E{|T3W}w9{^rWd*tQf6()eV2}
+authoritiesClaim: ${AUTHORITIES_CLAIM:auths}
+# JWT config end
+
 whiteListedAuthUrls: /api,/api/public**
 jwtTokenMatchUrls: /api/protected/metrics**,/api/auth/authenticated
 headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials,X-Requested-With,Origin,Content-Type,Accept,Authorization,WWW-Authenticate
-methods: GET,POST,PATCH,PUT,DELETE
+methods: GET,POST,PATCH,PUT,DELETE,HEAD
 #exposedHeaders: WWW-Authenticate
 
 loginUrl: /api/auth/token

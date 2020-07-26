@@ -1,9 +1,6 @@
 package com.workingbit.digestauthwithjwt.service;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.proc.BadJOSEException;
@@ -23,60 +20,86 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static java.util.stream.Collectors.joining;
 
 @Service
 public class JwtService {
-  private static final String AUTHORITIES_CLAIM = "auths";
-  private static final String USER_ID_CLAIM = "userId";
 
-  private static final JWSAlgorithm JWS_ALGORITHM = JWSAlgorithm.HS256;
-  private static final String SECRET_KEY_ALGORITHM = "HMAC";
   private final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-  @Value("${tokenExpirationMinutes}")
-  Integer tokenExpirationMinutes;
+  @Value("${jwsAlgorithmName}")
+  private String jwsAlgorithmName;
+  @Value("${jwsAlgorithmRequirement}")
+  private String jwsAlgorithmRequirement;
+  @Value("${secretKeyAlgorithm}")
+  private String secretKeyAlgorithm;
+  @Value("${accessTokenExpirationMinutes}")
+  private Integer accessTokenExpirationMinutes;
+  @Value("${refreshTokenExpirationHours}")
+  private Integer refreshTokenExpirationHours;
   @Value("${tokenIssuer}")
-  String tokenIssuer;
+  private String tokenIssuer;
   @Value("${tokenSecret}")
-  String tokenSecret;
+  private String tokenSecret;
+  @Value("${authoritiesClaim}")
+  private String authoritiesClaim;
 
-  public static Authentication getUsernamePasswordAuthenticationToken(JWTClaimsSet claimsSet) {
-    String subject = claimsSet.getSubject();
-    String auths = (String) claimsSet.getClaim(AUTHORITIES_CLAIM);
-    String userId = (String) claimsSet.getClaim(USER_ID_CLAIM);
-    List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(auths.split(","));
-    return new UsernamePasswordAuthenticationToken(subject, userId, authorities);
+  private JWSAlgorithm jwsAlgorithm;
+
+  @PostConstruct
+  public void init() {
+    Requirement requirement = null;
+    if (jwsAlgorithmRequirement != null) {
+      requirement = Requirement.valueOf(jwsAlgorithmRequirement);
+    }
+    jwsAlgorithm = new JWSAlgorithm(jwsAlgorithmName, requirement);
   }
 
-  public String generateToken(String credentials, String subjectName, Collection<? extends GrantedAuthority> authorities) {
-    Date expirationTime = Date.from(Instant.now().plus(tokenExpirationMinutes, ChronoUnit.MINUTES));
+  public Authentication getUsernamePasswordAuthenticationToken(JWTClaimsSet claimsSet) {
+    String subject = claimsSet.getSubject();
+    String auths = (String) claimsSet.getClaim(authoritiesClaim);
+    List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(auths.split(","));
+    return new UsernamePasswordAuthenticationToken(subject, null, authorities);
+  }
+
+  public Map<String, String> generateToken(String principal, Collection<? extends GrantedAuthority> authorities) {
+    String accessToken = generateAccessToken(principal, new ArrayList<>(authorities));
+    String refreshToken = generateRefreshToken(principal, new ArrayList<>(authorities));
+    return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
+  }
+
+  public String generateAccessToken(String principal, List<GrantedAuthority> authorities) {
+    return generateToken(principal, authorities, accessTokenExpirationMinutes);
+  }
+
+  public String generateRefreshToken(String principal, List<GrantedAuthority> authorities) {
+    return generateToken(principal, authorities, refreshTokenExpirationHours * 60);
+  }
+
+  private String generateToken(String principal, List<GrantedAuthority> authorities, Integer expirationMinutes) {
+    Date expirationTime = Date.from(Instant.now().plus(expirationMinutes, ChronoUnit.MINUTES));
+    String authoritiesClaimStr = authorities
+        .stream()
+        .map(GrantedAuthority::getAuthority)
+        .collect(joining(","));
     JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-        .subject(subjectName)
+        .subject(principal)
         .issuer(tokenIssuer)
         .expirationTime(expirationTime)
-        .claim(AUTHORITIES_CLAIM,
-            authorities
-                .parallelStream()
-                .map(auth -> (GrantedAuthority) auth)
-                .map(GrantedAuthority::getAuthority)
-                .collect(joining(",")))
-        .claim(USER_ID_CLAIM, credentials)
+        .claim(authoritiesClaim, authoritiesClaimStr)
         .build();
 
-    SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWS_ALGORITHM), claimsSet);
-
+    SignedJWT signedJWT = new SignedJWT(new JWSHeader(jwsAlgorithm), claimsSet);
     try {
-      final SecretKey key = new SecretKeySpec(tokenSecret.getBytes(), SECRET_KEY_ALGORITHM);
+      final SecretKey key = new SecretKeySpec(tokenSecret.getBytes(), secretKeyAlgorithm);
       signedJWT.sign(new MACSigner(key));
     } catch (JOSEException e) {
       logger.error("ERROR while signing JWT", e);
@@ -86,7 +109,7 @@ public class JwtService {
     return signedJWT.serialize();
   }
 
-  public JWTClaimsSet verifySignedJWT(String token) {
+  public JWTClaimsSet getVerifyAndGetClaim(String token) {
     try {
       SignedJWT signedJWT = SignedJWT.parse(token);
       JWSVerifier verifier = new MACVerifier(tokenSecret);
@@ -94,7 +117,7 @@ public class JwtService {
       if (valid) {
         ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
         jwtProcessor.setJWSKeySelector((header, context) -> {
-          final SecretKey key = new SecretKeySpec(tokenSecret.getBytes(), SECRET_KEY_ALGORITHM);
+          final SecretKey key = new SecretKeySpec(tokenSecret.getBytes(), secretKeyAlgorithm);
           return List.of(key);
         });
         return jwtProcessor.process(signedJWT, null);

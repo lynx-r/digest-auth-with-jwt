@@ -54,6 +54,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
         .antMatchers(whiteListedAuthUrls)
         .permitAll();
+
+//    http
+//        .exceptionHandling()
+//        .disable();
   }
 
   @Bean

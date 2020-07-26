@@ -1,6 +1,6 @@
 import { Button, Card, Elevation, FormGroup, InputGroup, } from '@blueprintjs/core'
-import { login, request } from 'api'
-import { useToaster } from 'hook'
+import { request } from 'api'
+import { useAuth, useToaster } from 'hook'
 import { User } from 'model'
 import React, { useContext, useState } from 'react'
 import { AuthContext, loginAction } from 'store'
@@ -8,22 +8,22 @@ import { handleStringChange } from 'utils'
 
 const Login = () => {
   const {dispatch} = useContext(AuthContext)
+  const {login} = useAuth()
   const {addSuccessToast, addErrorToast} = useToaster()
   const [user, setUser] = useState<User>({
     username: '9999999999',
     password: 'password',
   })
   const onLogin = async () => {
-    console.log('login', user)
-    // const r = await request()
-    // console.log(r)
-    const res: any = await login(user)
-    console.log('res', res)
-    const metrics = await request(res.data.token)
-    console.log('metrics', metrics)
-
+    await login(user)
     dispatch(loginAction({loggedIn: true, authorities: ['user']}))
   }
+
+  const onRegister = async () => {
+    const metrics = await request()
+    console.log('metrics', metrics)
+  }
+
   const handleLoginChange = handleStringChange((username) =>
     setUser((s) => ({...s, username}))
   )
@@ -61,7 +61,7 @@ const Login = () => {
         </FormGroup>
         <div className="row justify-content-end">
           <div className="col-auto">
-            <Button icon="person">Register</Button>
+            <Button icon="person" onClick={onRegister}>Register</Button>
           </div>
           <div className="col-auto">
             <Button icon="log-in" onClick={onLogin}>

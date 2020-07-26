@@ -66,8 +66,8 @@ public class JwtAuthFilter extends AbstractAuthenticationProcessingFilter {
     String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
     String token = getTokenFromHeader(authHeader);
     if (!token.isEmpty()) {
-      var claim = jwtService.verifySignedJWT(token);
-      return JwtService.getUsernamePasswordAuthenticationToken(claim);
+      var claim = jwtService.getVerifyAndGetClaim(token);
+      return jwtService.getUsernamePasswordAuthenticationToken(claim);
     } else {
       throw new BadCredentialsException("Invalid token");
     }

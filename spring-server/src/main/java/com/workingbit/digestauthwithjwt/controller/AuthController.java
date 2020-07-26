@@ -24,8 +24,16 @@ public class AuthController {
   @PreAuthorize("hasAnyRole('GUEST', 'ADMIN')")
   public ResponseEntity<Map<String, String>> getToken(Authentication authentication) {
     User user = (User) authentication.getPrincipal();
-    String token = jwtService.generateToken(user.getUsername(), user.getUsername(), user.getAuthorities());
-    return ResponseEntity.ok(Map.of("token", token));
+    Map<String, String> token = jwtService.generateToken(user.getUsername(), user.getAuthorities());
+    return ResponseEntity.ok(token);
+  }
+
+  @PostMapping("token/refresh")
+  @PreAuthorize("hasAnyRole('GUEST', 'ADMIN')")
+  public ResponseEntity<Map<String, String>> getRefreshToken(Authentication authentication) {
+    User user = (User) authentication.getPrincipal();
+    Map<String, String> token = jwtService.generateToken(user.getUsername(), user.getAuthorities());
+    return ResponseEntity.ok(token);
   }
 
   @GetMapping("authenticated")
