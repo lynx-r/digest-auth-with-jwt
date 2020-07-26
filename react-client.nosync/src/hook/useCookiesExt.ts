@@ -1,17 +1,8 @@
 import { CONSTANTS } from 'config'
+import { CookieOptions } from 'model'
 import { useCookies } from 'react-cookie'
 
 const {COOKIE_PATH} = CONSTANTS
-
-export interface CookieOptions {
-  path: string
-  expires: Date
-  maxAge: number
-  domain: string
-  secure: boolean
-  httpOnly: boolean
-  sameSite: boolean | 'none' | 'lax' | 'strict'
-}
 
 const useCookiesExt = (deps?: string[]) => {
   const [cookies, setCookie, removeCookie] = useCookies(deps)

@@ -10,14 +10,11 @@ server:
 # common
 
 # JWT config
-jwsAlgorithmName: ${JWS_ALGORITHM_NAME:HS256}
-jwsAlgorithmRequirement: ${JWS_ALGORITHM_REQUIREMENT:REQUIRED}
-secretKeyAlgorithm: ${SECRET_KEY_ALGORITHM:HMAC}
 accessTokenExpirationMinutes: ${ACCESS_TOKEN_EXPIRATION_MINUTES:1}
 refreshTokenExpirationHours: ${REFRESH_TOKEN_EXPIRATION_HOURS:48}
 tokenIssuer: ${TOKEN_ISSUER:workingbit.com}
 # length minimum 256 bites
-tokenSecret: ${TOKEN_SECRET:S2{Ux(QSDpuF(qh_E{|T3W}w9{^rWd*tQf6()eV2}
+tokenSecret: ${TOKEN_SECRET:oz85FpcY6MlIkDtiyIyNUM3fQOJbrmBiFdi6XJnPauA=}
 authoritiesClaim: ${AUTHORITIES_CLAIM:auths}
 # JWT config end
 

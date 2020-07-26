@@ -21,16 +21,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.workingbit.digestauthwithjwt.service.JwtService.getTokenFromHeader;
+
 @Component
-@WebFilter({"/api/protected/metrics**", "/api/auth/authenticated"})
+@WebFilter({"/api/protected/metrics**", "/api/auth/authenticated", "/api/auth/token/refresh"})
 public class JwtAuthFilter extends AbstractAuthenticationProcessingFilter {
-  private static final String BEARER = "Bearer ";
 
   private final JwtService jwtService;
 
   public JwtAuthFilter(JwtService jwtService) {
     super(new OrRequestMatcher(new AntPathRequestMatcher("/api/protected/metrics**"),
-        new AntPathRequestMatcher("/api/auth/authenticated")));
+        new AntPathRequestMatcher("/api/auth/authenticated"),
+        new AntPathRequestMatcher("/api/auth/token/refresh")
+    ));
     this.jwtService = jwtService;
     setAuthenticationManager(authenticationManager());
     setAuthenticationSuccessHandler(authenticationSuccessHandler());
@@ -51,18 +54,9 @@ public class JwtAuthFilter extends AbstractAuthenticationProcessingFilter {
     };
   }
 
-  private static String getTokenFromHeader(String authHeader) {
-    if (authHeader != null) {
-      boolean matchBearerLength = authHeader.length() > BEARER.length();
-      if (matchBearerLength) {
-        return authHeader.substring(BEARER.length());
-      }
-    }
-    return "";
-  }
-
   @Override
-  public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+  public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+      throws AuthenticationException {
     String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
     String token = getTokenFromHeader(authHeader);
     if (!token.isEmpty()) {
@@ -71,7 +65,6 @@ public class JwtAuthFilter extends AbstractAuthenticationProcessingFilter {
     } else {
       throw new BadCredentialsException("Invalid token");
     }
-
   }
 
 }

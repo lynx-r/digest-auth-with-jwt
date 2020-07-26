@@ -15,6 +15,7 @@ const Login = () => {
     password: 'password',
   })
   const onLogin = async () => {
+    console.log('???')
     await login(user)
     dispatch(loginAction({loggedIn: true, authorities: ['user']}))
   }
