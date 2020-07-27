@@ -16,6 +16,7 @@ export const setDefaultAuthorizationHeader = (token: string) => {
 export const httpGet = <T>(path: string, config?: AxiosRequestConfig) => {
   return axiosInstance.get<T>(path, config)
     .then(({data}) => data)
+    // .catch(console.log)
 }
 
 export const httpHead = <T>(path: string, config?: AxiosRequestConfig) => {

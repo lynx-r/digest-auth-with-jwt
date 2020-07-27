@@ -47,12 +47,16 @@ export const updateTokenIfNeeded = (req: AxiosRequestConfig) => {
     return req
   }
   const accessToken = getCookie(ACCESS_TOKEN_COOKIE)
-  const token = jwt<any>(accessToken)
-  const tokenExp = token.exp
-  const now = Math.floor(Date.now() / 1000)
-  const diff = (tokenExp - now)
-  if (diff < 60) {
-    return updateToken(req)
+  try {
+    const token = jwt<any>(accessToken)
+    const tokenExp = token.exp
+    const now = Math.floor(Date.now() / 1000)
+    const diff = (tokenExp - now)
+    if (diff < 60) {
+      return updateToken(req)
+    }
+  } catch (e) {
+    console.log(e)
   }
   return req
 }
@@ -60,6 +64,12 @@ export const updateTokenIfNeeded = (req: AxiosRequestConfig) => {
 const authObserve = () => {
   const headers = {Authorization: 'Digest try'}
   return httpHead(LOGIN_URL, {headers})
+    .catch(err => {
+      if (err.response.status === 401) {
+        return err.response
+      }
+      throw err
+    })
 }
 
 const setToken = ({accessToken, refreshToken}: Token) => {

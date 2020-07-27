@@ -2,7 +2,6 @@ package com.workingbit.digestauthwithjwt.config;
 
 import com.workingbit.digestauthwithjwt.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
@@ -21,7 +20,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 @EnableWebSecurity
-@ServletComponentScan("ru.hackatonkursk.auth")
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -54,10 +52,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
         .antMatchers(whiteListedAuthUrls)
         .permitAll();
-
-//    http
-//        .exceptionHandling()
-//        .disable();
   }
 
   @Bean

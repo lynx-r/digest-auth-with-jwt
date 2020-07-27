@@ -10,7 +10,7 @@ server:
 # common
 
 # JWT config
-accessTokenExpirationMinutes: ${ACCESS_TOKEN_EXPIRATION_MINUTES:1}
+accessTokenExpirationMinutes: ${ACCESS_TOKEN_EXPIRATION_MINUTES:15}
 refreshTokenExpirationHours: ${REFRESH_TOKEN_EXPIRATION_HOURS:48}
 tokenIssuer: ${TOKEN_ISSUER:workingbit.com}
 # length minimum 256 bites
@@ -19,7 +19,7 @@ authoritiesClaim: ${AUTHORITIES_CLAIM:auths}
 # JWT config end
 
 whiteListedAuthUrls: /api,/api/public**
-jwtTokenMatchUrls: /api/protected/metrics**,/api/auth/authenticated
+jwtTokenMatchUrls: /api/protected/metrics**,/api/auth/authenticated,/api/auth/token/refresh
 headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials,X-Requested-With,Origin,Content-Type,Accept,Authorization,WWW-Authenticate
 methods: GET,POST,PATCH,PUT,DELETE,HEAD
 #exposedHeaders: WWW-Authenticate
