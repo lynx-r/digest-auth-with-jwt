@@ -1,8 +1,12 @@
 import { updateTokenIfNeeded } from 'api/auth'
 import axios, { AxiosRequestConfig } from 'axios'
 import { API_URLS, CONSTANTS } from 'config'
+import { getCookie } from 'utils'
 
-const {AUTHORIZATION_HEADER, AUTHORIZATION_SCHEME, X_CSRF_TOKEN_HEADER, X_SESSION_TOKEN_HEADER} = CONSTANTS
+const {
+  AUTHORIZATION_HEADER, AUTHORIZATION_SCHEME, CSRF_TOKEN_HEADER, SESSION_TOKEN_HEADER,
+  ACCESS_TOKEN_COOKIE, CSRF_TOKEN_COOKIE, SESSION_TOKEN_COOKIE
+} = CONSTANTS
 export const axiosInstance = axios.create({
   baseURL: API_URLS.BASE_URL,
   responseType: 'json',
@@ -15,12 +19,9 @@ export const setDefaultAuthorizationHeader = (token: string) => {
   axiosInstance.defaults.headers.common[AUTHORIZATION_HEADER] = AUTHORIZATION_SCHEME + token
 }
 
-export const setCsrfTokenHeader = (token: string) => {
-  axiosInstance.defaults.headers.common[X_CSRF_TOKEN_HEADER] = token
-}
-
-export const setSessionTokenHeader = (token: string) => {
-  axiosInstance.defaults.headers.common[X_SESSION_TOKEN_HEADER] = token
+export const setDefaultSessionHeader = (csrfToken: string, sessionToken: string) => {
+  axiosInstance.defaults.headers.common[CSRF_TOKEN_HEADER] = csrfToken
+  axiosInstance.defaults.headers.common[SESSION_TOKEN_HEADER] = sessionToken
 }
 
 export const httpGet = <T>(path: string, config?: AxiosRequestConfig) => {
@@ -35,7 +36,6 @@ export const httpHead = <T>(path: string, config?: AxiosRequestConfig) => {
 
 export const httpPost = <T>(path: string, req: any, config?: AxiosRequestConfig) => {
   return axiosInstance.post<T>(path, req, config)
-    .then(({data}: { data: T }) => data)
 }
 
 export const httpPut = <T>(path: string, req: T, config?: AxiosRequestConfig) => {
@@ -44,4 +44,15 @@ export const httpPut = <T>(path: string, req: T, config?: AxiosRequestConfig) =>
 
 export const httpRemove = <T>(path: string, config?: AxiosRequestConfig) => {
   return axiosInstance.delete<T>(path, config)
+}
+
+const accessToken = getCookie(ACCESS_TOKEN_COOKIE)
+if (!!accessToken) {
+  setDefaultAuthorizationHeader(accessToken)
+}
+
+const csrfToken = getCookie(CSRF_TOKEN_COOKIE)
+const sessionToken = getCookie(SESSION_TOKEN_COOKIE)
+if (!!csrfToken && !!sessionToken) {
+  setDefaultSessionHeader(csrfToken, sessionToken)
 }
