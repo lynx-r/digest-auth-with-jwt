@@ -4,15 +4,13 @@ import { API_URLS, CONSTANTS } from 'config'
 import { getCookie } from 'utils'
 
 const {
-  AUTHORIZATION_HEADER, AUTHORIZATION_SCHEME, CSRF_TOKEN_HEADER, SESSION_TOKEN_HEADER,
-  ACCESS_TOKEN_COOKIE, CSRF_TOKEN_COOKIE, SESSION_TOKEN_COOKIE
+  AUTHORIZATION_HEADER, AUTHORIZATION_SCHEME, CSRF_TOKEN_HEADER, SESSION_TOKEN_HEADER, ACCESS_TOKEN_COOKIE,
 } = CONSTANTS
 export const axiosInstance = axios.create({
   baseURL: API_URLS.BASE_URL,
   responseType: 'json',
 })
 
-// axiosInstance.interceptors.request.use((req: AxiosRequestConfig) => requestCsrfIfNeeded(req))
 axiosInstance.interceptors.request.use((req: AxiosRequestConfig) => updateTokenIfNeeded(req))
 
 export const setDefaultAuthorizationHeader = (token: string) => {
@@ -49,10 +47,4 @@ export const httpRemove = <T>(path: string, config?: AxiosRequestConfig) => {
 const accessToken = getCookie(ACCESS_TOKEN_COOKIE)
 if (!!accessToken) {
   setDefaultAuthorizationHeader(accessToken)
-}
-
-const csrfToken = getCookie(CSRF_TOKEN_COOKIE)
-const sessionToken = getCookie(SESSION_TOKEN_COOKIE)
-if (!!csrfToken && !!sessionToken) {
-  setDefaultSessionHeader(csrfToken, sessionToken)
 }
