@@ -1,7 +1,6 @@
 import { updateTokenIfNeeded } from 'api/auth'
 import axios, { AxiosRequestConfig } from 'axios'
 import { API_URLS, CONSTANTS } from 'config'
-import { getCookie } from 'utils'
 
 const {
   AUTHORIZATION_HEADER, AUTHORIZATION_SCHEME, CSRF_TOKEN_HEADER, SESSION_TOKEN_HEADER, ACCESS_TOKEN_COOKIE,
@@ -24,8 +23,6 @@ export const setDefaultSessionHeader = (csrfToken: string, sessionToken: string)
 
 export const httpGet = <T>(path: string, config?: AxiosRequestConfig) => {
   return axiosInstance.get<T>(path, config)
-  // .then(({data}) => data)
-  // .catch(console.log)
 }
 
 export const httpHead = <T>(path: string, config?: AxiosRequestConfig) => {
@@ -42,9 +39,4 @@ export const httpPut = <T>(path: string, req: T, config?: AxiosRequestConfig) =>
 
 export const httpRemove = <T>(path: string, config?: AxiosRequestConfig) => {
   return axiosInstance.delete<T>(path, config)
-}
-
-const accessToken = getCookie(ACCESS_TOKEN_COOKIE)
-if (!!accessToken) {
-  setDefaultAuthorizationHeader(accessToken)
 }

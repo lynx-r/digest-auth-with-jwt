@@ -56,17 +56,6 @@ export const updateToken = (req: AxiosRequestConfig) => {
     })
 }
 
-export const requestCsrf = () => {
-  httpGet<{ headerName: string, token: string }>(CSRF_URL)
-    .then(({data: {token: csrfToken}, headers: {[SESSION_TOKEN_HEADER]: sessionToken}}) =>
-      setDefaultSessionHeader(csrfToken, sessionToken))
-    .catch(err => {
-      console.error(err)
-      alert('Error')
-      return err
-    })
-}
-
 export const updateTokenIfNeeded = (req: AxiosRequestConfig) => {
   if (req.url === CSRF_URL || req.url === REFRESH_TOKEN_URL || req.url === LOGIN_URL) {
     return req
@@ -105,4 +94,24 @@ const setToken = ({accessToken, refreshToken}: Token) => {
   setDefaultAuthorizationHeader(accessToken)
 }
 
-requestCsrf()
+const requestCsrf = () => {
+  httpGet<{ headerName: string, token: string }>(CSRF_URL)
+    .then(({data: {token: csrfToken}, headers: {[SESSION_TOKEN_HEADER]: sessionToken}}) =>
+      setDefaultSessionHeader(csrfToken, sessionToken))
+    .catch(err => {
+      console.error(err)
+      alert('Error')
+      return err
+    })
+}
+
+const initAuth = () => {
+  const accessToken = getCookie(ACCESS_TOKEN_COOKIE)
+  if (!!accessToken) {
+    setDefaultAuthorizationHeader(accessToken)
+  }
+  requestCsrf()
+}
+
+initAuth()
+
