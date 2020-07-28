@@ -22,13 +22,10 @@ public class DigestAuthFilter extends DigestAuthenticationFilter {
 
   @PostConstruct
   private void init() {
-    setAuthenticationEntryPoint(authenticationEntryPoint());
-  }
-
-  private DigestAuthenticationEntryPoint authenticationEntryPoint() {
     var entryPoint = new DigestAuthenticationEntryPoint();
     entryPoint.setKey(realmKey);
     entryPoint.setRealmName(realmName);
-    return entryPoint;
+    setAuthenticationEntryPoint(entryPoint);
   }
+
 }

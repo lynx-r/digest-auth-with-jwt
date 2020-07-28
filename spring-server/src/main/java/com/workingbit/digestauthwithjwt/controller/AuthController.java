@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -15,6 +16,11 @@ import java.util.Map;
 public class AuthController {
 
   private final JwtService jwtService;
+
+  @GetMapping("csrf")
+  public CsrfToken csrf(CsrfToken token) {
+    return token;
+  }
 
   @PostMapping("token")
   @PreAuthorize("hasAnyRole('GUEST', 'ADMIN')")

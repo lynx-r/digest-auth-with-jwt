@@ -1,18 +1,37 @@
 import { ClientDigestAuth } from '@mreal/digest-auth'
-import { httpHead, httpPost, setDefaultAuthorizationHeader } from 'api/common'
+import {
+  httpGet,
+  httpHead,
+  httpPost,
+  setCsrfTokenHeader,
+  setDefaultAuthorizationHeader,
+  setSessionTokenHeader
+} from 'api/common'
 import { AxiosRequestConfig } from 'axios'
 import { API_URLS, CONSTANTS } from 'config'
 import jwt from 'jwt-decode'
 import { Token, User } from 'model'
 import { getCookie, setCookie } from 'utils'
 
-const {ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE} = CONSTANTS
-const {REFRESH_TOKEN_URL, LOGIN_URL} = API_URLS
+const {
+  AUTHENTICATE_HEADER, AUTHORIZATION_HEADER, AUTHORIZATION_SCHEME, ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE, X_CSRF_TOKEN_HEADER, X_SESSION_TOKEN_HEADER
+} = CONSTANTS
+
+const {CSRF_URL, REFRESH_TOKEN_URL, LOGIN_URL} = API_URLS
 
 export const getToken = async ({username, password}: User) => {
-  const response = await authObserve()
+  const res = await httpGet<{ headerName: string, token: string }>(CSRF_URL)
+  const {data: {token: xCsrfToken}, headers: {[X_SESSION_TOKEN_HEADER]: xAuthToken}} = res
+  console.log(xAuthToken)
+  setCsrfTokenHeader(xCsrfToken)
+  setSessionTokenHeader(xAuthToken)
+  const csrfHeader = {[X_CSRF_TOKEN_HEADER]: xCsrfToken}
+
+  console.log(csrfHeader)
+  const response = await authObserve(csrfHeader)
   const {headers: tryHeaders} = response
-  const wwwAuthenticate = tryHeaders['www-authenticate']
+  const wwwAuthenticate = tryHeaders[AUTHENTICATE_HEADER]
   const incomingDigest = ClientDigestAuth.analyze(wwwAuthenticate)
   const digest = ClientDigestAuth.generateProtectionAuth(
     incomingDigest,
@@ -25,25 +44,33 @@ export const getToken = async ({username, password}: User) => {
     }
   )
 
-  const headers = {Authorization: digest.raw}
+  const headers = {[AUTHORIZATION_HEADER]: digest.raw}
   return httpPost<Token>(LOGIN_URL, {}, {headers})
     .then(setToken)
 }
 
 export const updateToken = (req: AxiosRequestConfig) => {
   const refreshToken = getCookie(REFRESH_TOKEN_COOKIE)
-  const headers = {Authorization: 'Bearer ' + refreshToken}
+  const headers = {[AUTHORIZATION_HEADER]: AUTHORIZATION_SCHEME + refreshToken}
   return httpPost<Token>(REFRESH_TOKEN_URL, {}, {headers})
     .then(token => {
       setToken(token)
-      req.headers['Authorization'] = 'Bearer ' + token.accessToken
+      req.headers[AUTHORIZATION_HEADER] = AUTHORIZATION_SCHEME + token.accessToken
       return req
     })
 }
 
+export const requestCsrfIfNeeded = (req: AxiosRequestConfig) => {
+  if (req.url === CSRF_URL || req.url === REFRESH_TOKEN_URL || req.url === LOGIN_URL) {
+    return req
+  }
+  const res = httpGet(CSRF_URL)
+  res.then(res => console.log(res))
+  return req
+}
 
 export const updateTokenIfNeeded = (req: AxiosRequestConfig) => {
-  if (req.url === REFRESH_TOKEN_URL || req.url === LOGIN_URL) {
+  if (req.url === CSRF_URL || req.url === REFRESH_TOKEN_URL || req.url === LOGIN_URL) {
     return req
   }
   const accessToken = getCookie(ACCESS_TOKEN_COOKIE)
@@ -61,10 +88,11 @@ export const updateTokenIfNeeded = (req: AxiosRequestConfig) => {
   return req
 }
 
-const authObserve = () => {
-  const headers = {Authorization: 'Digest try'}
+const authObserve = (csrfHeader: { [key: string]: string }) => {
+  const headers = {[AUTHORIZATION_HEADER]: 'Digest try', ...csrfHeader}
   return httpHead(LOGIN_URL, {headers})
     .catch(err => {
+      console.log(err.response)
       if (err.response.status === 401) {
         return err.response
       }

@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
+import org.springframework.session.web.http.HttpSessionIdResolver;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,33 +27,31 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Value("${logoutUrl}")
   private String logoutUrl;
+
   @Value("${whiteListedAuthUrls}")
   private String[] whiteListedAuthUrls;
+
   @Value("${originUrls}")
   private String[] originUrls;
+
   @Value("${headers}")
   private String[] headers;
+
+  @Value("${exposedHeaders}")
+  private String[] exposedHeaders;
+
   @Value("${methods}")
   private String[] methods;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http
-        .cors();
+    http.cors();
 
-    http
-        .csrf()
-        .disable();
-
-    http
-        .logout()
+    http.logout()
         .logoutUrl(logoutUrl)
         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK));
 
-    http
-        .authorizeRequests()
-        .antMatchers(whiteListedAuthUrls)
-        .permitAll();
+    http.authorizeRequests().antMatchers(whiteListedAuthUrls).permitAll();
   }
 
   @Bean
@@ -72,9 +72,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     configuration.setAllowedOrigins(Arrays.asList(originUrls));
     configuration.setAllowedMethods(Arrays.asList(methods));
     configuration.setAllowedHeaders(Arrays.asList(headers));
-    configuration.setExposedHeaders(Arrays.asList(headers));
+    configuration.setExposedHeaders(Arrays.asList(exposedHeaders));
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
   }
+
+  @Bean
+  public HttpSessionIdResolver httpSessionIdResolver() {
+    return HeaderHttpSessionIdResolver.xAuthToken();
+  }
+
 }

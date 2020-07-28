@@ -1,6 +1,8 @@
 spring:
   profiles:
     active: dev
+  session:
+    store-type: redis
 
 server:
   error:
@@ -20,9 +22,9 @@ authoritiesClaim: ${AUTHORITIES_CLAIM:auths}
 
 whiteListedAuthUrls: /api,/api/public**
 jwtTokenMatchUrls: /api/protected/metrics**,/api/auth/authenticated,/api/auth/token/refresh
-headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials,X-Requested-With,Origin,Content-Type,Accept,Authorization,WWW-Authenticate
+headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials,Origin,Content-Type,Authorization,WWW-Authenticate,X-CSRF-TOKEN,X-Auth-Token
 methods: GET,POST,PATCH,PUT,DELETE,HEAD
-#exposedHeaders: WWW-Authenticate
+exposedHeaders: Access-Control-Allow-Origin,Access-Control-Allow-Credentials,Origin,Authorization,WWW-Authenticate,X-CSRF-TOKEN,X-Auth-Token
 
 loginUrl: /api/auth/token
 logoutUrl: /api/logout
@@ -55,7 +57,7 @@ spring:
 logging:
   level:
     ru.hackatonkursk: debug
-    web: debug
-#    org.springframework: debug
+    #    web: debug
+    org.springframework: debug
 
 originUrls: http://localhost:3000,http://localhost:4200

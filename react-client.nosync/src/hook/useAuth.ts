@@ -1,4 +1,4 @@
-import { axiosInstance, getToken } from 'api'
+import { getToken } from 'api'
 import { CONSTANTS } from 'config'
 import { useCookies } from 'hook'
 import { User } from 'model'
@@ -6,10 +6,6 @@ import { User } from 'model'
 const {ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE} = CONSTANTS
 
 const COOKIE_DEPS = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE]
-
-const setDefaultAuthorizationHeader = (token: string) => {
-  axiosInstance.defaults.headers.common['Authorization'] = 'Bearer ' + token
-}
 
 const useAuth = () => {
   const {cookies, setCookie, removeCookie} = useCookies(COOKIE_DEPS)
